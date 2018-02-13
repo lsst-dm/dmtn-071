@@ -482,6 +482,154 @@ You can run multiple receive commands on different containers and all those pack
 should be received.  Remember that since this tests a multicast protocol, some
 packets may be dropped or duplicated on the receiving side.
 
+Dashboard
+=========
+
+The following describes how to deploy the most current version of the Kubernetes Dashboard.
+
+A Kubernetes dashboard can be deployed using the command:
+
+.. code-block:: text
+
+    $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+    secret "kubernetes-dashboard-certs" created
+    serviceaccount "kubernetes-dashboard" created
+    role "kubernetes-dashboard-minimal" created
+    rolebinding "kubernetes-dashboard-minimal" created
+    deployment "kubernetes-dashboard" created
+    service "kubernetes-dashboard" created
+    $ 
+
+In order to access the dashboard with your browser on your local machine, execute the following:
+
+
+.. code-block:: text
+
+    $ kubectl proxy
+    Starting to serve on 127.0.0.1:8001
+
+This sets up a proxy to which you will use to connect to the dashboard.  Keep in mind that in order to run this from your local machine, you have to have
+the kubernetes tools installed.
+
+Setting up access to the dashboard
+---------------------------------
+
+Create the YAML file serviceaccount.yml
+
+.. code-block:: text
+
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: admin-user
+      namespace: kube-system
+
+And execute:
+
+.. code-block:: text
+
+    $ kubectl create -f serviceaccount.yml
+
+Next, create the YAML file clusterrolebinding.yml:
+
+.. code-block:: text
+
+    apiVersion: rbac.authorization.k8s.io/v1beta1
+    kind: ClusterRoleBinding
+    metadata:
+      name: admin-user
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: cluster-admin
+    subjects:
+    - kind: ServiceAccount
+      name: admin-user
+      namespace: kube-system
+
+execute the command:
+
+.. code-block:: text
+
+    $ kubectl create -f clusterrolebinding.yml
+
+
+
+Now go to this page, 
+
+.. code-block:: text
+
+    http://127.0.0.1:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/login
+
+And you’ll be presented with a page that looks like this.
+
+.. image:: images/auth.png
+
+
+Either use the kubeconfig file, or create a token and use that.  To create a token, do the following:
+
+.. code-block:: text
+￼
+    $ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
+    Name:         admin-user-token-gztds
+    Namespace:    kube-system
+    Labels:       <none>
+    Annotations:  kubernetes.io/service-account.name=admin-user
+                  kubernetes.io/service-account.uid=9fb87e35-0dd9-11e8-bb94-00505696e251
+    
+    Type:  kubernetes.io/service-account-token
+
+    Data
+    ====
+    token:      eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi11c2VyLXRva2VuLWd6dGRzIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2bWNlLWFjY291bnQubmFtZSI6ImFkbWluLXVzZXIiLCJrdWJlcm5ldGVzLmlvL4NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI5ZmI5NmUzNS0wZGQ5LTExZTgtYmI5NC0wMDUwNTY5NmU5NTEiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6a3ViZS1zeXN0ZW06YWRtaW4tdXNlciJ9.IWSHY_fSQ5hRDxdjVycinjrenUqM-aJFP_C_YnSRLFKH4YOBdtR2-Q6WO3nMRpHXCTzmQdgtuvgBmwpXuLzU3H_b4CaiqALiT7fP680CBvcGmT6ZWf9Dii7UqCgoM4c1pcmXF3u2mF4p0U6I841Pq6rdc5OpDouSBMzV_B1tzDpHQZI9-K4cRLcozgJqZcoeQSQ7t6Ufpaai_u31uPYRdo7YSlrmGAzx47hzT5Zg0YErp6KCcUqu3shpEd2GbIE_I5FVQ7edzg04r37s0JewA8ZJnBC5cUsjaT0D6yx7KPyIRuXtyB66jw1yIf0MAcO_LrGjbfP90FDV9rTrbjbc2A
+    ca.crt:     1025 bytes
+    namespace:  11 bytes
+    $
+
+Copy and paste the token (no spaces!) into the token field in the dialog, and then click the “Sign In” button.   You should now be logged in.
+
+Further details on using the Dashboard are available here:
+
+.. code-block:: text
+
+    https://github.com/kubernetes/dashboard/wiki/Accessing-dashboard
+
+
+
+Dashboard Issues you may run into
+=================================
+
+Errors when deploying dashboard
+-------------------------------
+
+If you’re trying to apply the dashboard and you get output like this:
+
+.. code-block:: text
+
+    $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+    secret "kubernetes-dashboard-certs" configured
+    serviceaccount "kubernetes-dashboard" configured
+    service "kubernetes-dashboard" configured
+    unable to decode "https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml": no kind "Role" is registered for version "rbac.authorization.k8s.io/v1"
+    unable to decode "https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml": no kind "RoleBinding" is registered for version "rbac.authorization.k8s.io/v1"
+    unable to decode "https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml": no kind "Deployment" is registered for version "apps/v1beta2"
+
+It may be because the client version of the software you’re using (say on a laptop) is out of date.
+
+Error reaching the dashboard
+----------------------------
+
+If you can't reach the dashboard, be sure you're running:
+
+.. code-block:: text
+
+    $ kubectl proxy
+    Starting to serve on 127.0.0.1:8001
+
+in another window.  Keep in mind this needs to execute on the same machine from which you launch the browser.  Use the 127.0.0.1
+address, and not localhost (even though that's a conventional name to use for that IP address).  Some installations don't specify it, and 
+you'll get an error trying to reach localhost.  That's because it can't resolve the localhost name, not because the service proxy isn't running.
+
 
 .. .. rubric:: References
 
