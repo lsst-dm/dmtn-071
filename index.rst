@@ -569,7 +569,7 @@ And you’ll be presented with a page that looks like this.
 Either use the kubeconfig file, or create a token and use that.  To create a token, do the following:
 
 .. code-block:: text
-￼
+
     $ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
     Name:         admin-user-token-gztds
     Namespace:    kube-system
@@ -596,10 +596,10 @@ Further details on using the Dashboard are available here:
 
 
 Dashboard Issues you may run into
-=================================
+---------------------------------
 
 Errors when deploying dashboard
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you’re trying to apply the dashboard and you get output like this:
 
@@ -616,7 +616,7 @@ If you’re trying to apply the dashboard and you get output like this:
 It may be because the client version of the software you’re using (say on a laptop) is out of date.
 
 Error reaching the dashboard
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you can't reach the dashboard, be sure you're running:
 
