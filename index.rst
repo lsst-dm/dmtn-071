@@ -507,9 +507,8 @@ In order to access the dashboard with your browser on your local machine, execut
     $ kubectl proxy
     Starting to serve on 127.0.0.1:8001
 
-This sets up a proxy to which you will use to connect to the dashboard.  Keep in mind that in order to run this from your local machine, you have to have
-the kubernetes tools and the credentials for the cluster you're connecting to
-all set up.
+This sets up a proxy to which you will use to connect to the dashboard.  Keep in mind that in order to run this from your local machine, you have to set up
+the kubernetes tools and the credentials for the cluster to which you are connecting.
 
 Setting up access to the dashboard
 ---------------------------------
