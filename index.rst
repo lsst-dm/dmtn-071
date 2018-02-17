@@ -213,7 +213,7 @@ requirement to be ignored by executing the following command:
 
 .. code-block:: text
 
-    # kubeadm init --ignore-preflight-checks Swap
+    # kubeadm init --ignore-preflight-errors Swap
 
 After executing the "init" command, you should see output similar to this:
 
@@ -309,7 +309,6 @@ Next deploy the network overlay you wish to use.   We’ll use the Weave overlay
 .. code-block:: text
 
 	$ kubectl apply -f https://cloud.weave.works/k8s/v1.7/net
-	$ kubectl apply -f https://cloud.weave.works/k8s/v1.7/net
 	serviceaccount "weave-net" created
 	clusterrole "weave-net" created
 	clusterrolebinding "weave-net" created
@@ -331,11 +330,11 @@ run the following on each worker node:
 
 You may get an error about something failing preflight checks, most likely "Swap".  This
 means you're trying to execute on a machine with Swap enabled, which is not recommended,
-as mentioned above.  If you do see this issue and wish to continue with the system's Swap enabled, add the option "--ignore-preflight-checks":
+as mentioned above.  If you do see this issue and wish to continue with the system's Swap enabled, add the option "--ignore-preflight-errors":
 
 .. code-block:: text
 
-    # kubeadm join --token a24a11.0e6b932b0907deff 192.168.1.2:6443 --discovery-token-ca-cert-hash sha256:1ca7fbf4d402849f34a6dbf5810ee584df015d6deeb55ca6ff1f0a87773b97f9 --ignore-preflight-checks
+    # kubeadm join --token a24a11.0e6b932b0907deff 192.168.1.2:6443 --discovery-token-ca-cert-hash sha256:1ca7fbf4d402849f34a6dbf5810ee584df015d6deeb55ca6ff1f0a87773b97f9 --ignore-preflight-errors Swap
 
 Note that the join command can be issued up to the expiration time set for the token.  If you run the following as root:
 
@@ -508,8 +507,8 @@ In order to access the dashboard with your browser on your local machine, execut
     $ kubectl proxy
     Starting to serve on 127.0.0.1:8001
 
-This sets up a proxy to which you will use to connect to the dashboard.  Keep in mind that in order to run this from your local machine, you have to have
-the kubernetes tools installed.
+This sets up a proxy to which you will use to connect to the dashboard.  Keep in mind that in order to run this from your local machine, you have to set up
+the kubernetes tools and the credentials for the cluster to which you are connecting.
 
 Setting up access to the dashboard
 ---------------------------------
