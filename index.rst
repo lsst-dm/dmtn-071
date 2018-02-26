@@ -179,7 +179,7 @@ The above script executes the following steps:
 .. code-block:: text
 
     # KUBEADM_CONF=/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-    # printf '%s\n' 2i 'Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false"' . x | ex $KUBEADM_CONF
+    # printf '%s\n' 2i 'Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice"' . x | ex $KUBEADM_CONF
 
 7. Enable and start kubelet
 
