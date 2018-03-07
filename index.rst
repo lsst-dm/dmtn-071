@@ -71,13 +71,19 @@ Firewall
 
 Kubernetes, docker and the network overlays all add additional firewall rules to
 iptables.   These can conflict with existing firewall rules, and possibly cause
-failures in services.  The error logs for the control plane services in Kubernetes
-may mislead about what is actually going on.
+failures in services.  The error logs for the control plane services in Kubernetes may mislead about what is actually going on.
+
+This rule opened up access from the other node to the api:
+
+.. code-block:: text
+
+    -A INPUT -s 192.168.0.0/16 -p tcp -m multiport --dports 6443 -j ACCEPT
 
 We ran into an issue where the kube-dns service was not starting properly, would
 eventually fail, and go into a loop doing this. The logs indicated that services
-were unable to talk to the Kubernetes API server. The issue was that the firewall
-rules we had in place would drop packets that specifically didn’t go to a subnet
+were unable to talk to the Kubernetes API server. 
+
+There was also asn issue was that the firewall rules we had in place would drop packets that specifically didn’t go to a subnet
 we expected.  Since the traffic was coming from Weave, we were able to fix this
 by a firewall rule to accept traffic from the Weave network interface to the subnet
 we were interested in.
