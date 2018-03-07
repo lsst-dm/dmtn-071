@@ -197,6 +197,11 @@ The above script executes the following steps:
     EOF
     # sysctl -p /etc/sysctl.d/k8s.conf
 
+9. Some installations require ip forwarding to be explictly set:
+
+.. code-block:: text
+
+    # sysctl net.ipv4.ip_forward=1
 
 Installation
 ============
