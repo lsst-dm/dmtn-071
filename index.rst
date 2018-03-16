@@ -665,7 +665,7 @@ accessible from localhost, and uses port forwarding to drive traffic to the real
     $ ssh node-name-goes-here mkdir .kube
     $ scp ~/.kube/config node-name-goes-here:.kube/config
 
-4 One each worker node:
+4 On each worker node:
 
 .. code-block:: text
 
@@ -684,12 +684,6 @@ You can change the port-forwarding to another port changing the external port.  
 .. code-block:: text
     
     $ nohup kubectl port-forward --namespace kube-system $POD 5002:5000 &
-
-You many need to open additional ports in your firewall for this to work.
-
-.. code-block:: text
-
-
 
 To test
 -------
