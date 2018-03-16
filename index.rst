@@ -83,7 +83,7 @@ We ran into an issue where the kube-dns service was not starting properly, would
 eventually fail, and go into a loop doing this. The logs indicated that services
 were unable to talk to the Kubernetes API server. 
 
-There was also asn issue was that the firewall rules we had in place would drop packets that specifically didn’t go to a subnet
+There was also an issue was that the firewall rules we had in place would drop packets that specifically didn’t go to a subnet
 we expected.  Since the traffic was coming from Weave, we were able to fix this
 by a firewall rule to accept traffic from the Weave network interface to the subnet
 we were interested in.
@@ -185,7 +185,7 @@ The above script executes the following steps:
 .. code-block:: text
 
     # KUBEADM_CONF=/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-    # printf '%s\n' 2i 'Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false"' . x | ex $KUBEADM_CONF
+    # printf '%s\n' 2i 'Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice"' . x | ex $KUBEADM_CONF
 
 7. Enable and start kubelet
 
@@ -639,6 +639,99 @@ in another window.  Keep in mind this needs to execute on the same machine from 
 address, and not localhost (even though that's a conventional name to use for that IP address).  Some installations don't specify it, and 
 you'll get an error trying to reach localhost.  That's because it can't resolve the localhost name, not because the service proxy isn't running.
 
+Registry
+========
+
+There are a number of ways to deploy a local registry, and this is a quick and simple example of setting one up.  This makes it appear that the registry is always 
+accessible from localhost, and uses port forwarding to drive traffic to the real registry location.
+
+1. On the master node, create the registry:
+
+.. code-block:: text
+
+    $ kubectl create -f yml/registry.yml
+
+2. Set up a port-forwarding
+
+.. code-block:: text
+
+    $ POD=$(kubectl get pods --namespace kube-system -l k8s-app=kube-registry-upstream -o template --template '{{range .items}}{{.metadata.name}} {{.status.phase}}{{"\n"}}{{end}}' | grep Running | head -1 | cut -f1 -d' ')
+    $ nohup kubectl port-forward --namespace kube-system $POD 5000:5000 &
+
+3. Copy the admin.conf file from the head node to the rest of the cluster
+
+.. code-block:: text
+
+    $ ssh node-name-goes-here mkdir .kube
+    $ scp ~/.kube/config node-name-goes-here:.kube/config
+
+4 On each worker node:
+
+.. code-block:: text
+
+    $ kubectl create -f yml/node-redirect.yml
+    $ POD=$(kubectl get pods --namespace kube-system -l k8s-app=kube-registry-upstream -o template --template '{{range .items}}{{.metadata.name}} {{.status.phase}}{{"\n"}}{{end}}' | grep Running | head -1 | cut -f1 -d' ')
+    $ nohup kubectl port-forward --namespace kube-system $POD 5000:5000 &
+
+Things to note
+--------------
+The example assumes that /storage has already been created on your systems;  if you used this on a more permanent basis (rather than), you'd want this backed by
+a shared file system mounted under /storage so wherever the container ran, it would have access to it.
+
+The port forwarding forwards from external port 5000 to internal port (in the container) 5000.  The port 5000 might be in use by another process (like nuttcp).  
+You can change the port-forwarding to another port changing the external port.  For example, this forwards from external port 5002 to internal port 5000:
+
+.. code-block:: text
+    
+    $ nohup kubectl port-forward --namespace kube-system $POD 5002:5000 &
+
+To test
+-------
+
+1. Pull down an image from dockerhub
+
+.. code-block:: text
+
+    $ docker pull repo/container:version
+
+2. Tag it
+
+.. code-block:: text
+
+    $ docker tag repo/container:version localhost:5000/mycontainer
+
+3. Push the tagged version to the local registry
+
+.. code-block:: text
+
+    $ docker push localhost:5000/mycontainer
+
+4. Remove the tagged version
+
+.. code-block:: text
+
+    $ docker rmi localhost:5000/mycontainer
+
+5. Remove the image pulled from dockerhub
+
+.. code-block:: text
+
+    $ docker rmi repo/container:version
+
+Pod should now be available through local docker registry.
+Pods should now be able to be deployed, referencing the local registry.
+
+.. code-block:: text
+
+    # example
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: mycontainer
+    spec:
+      containers:
+      - name: mycontainer
+        image: localhost:5000/container
 
 .. .. rubric:: References
 
